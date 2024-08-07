@@ -12,7 +12,6 @@ namespace BarcodeScannerApp
     public sealed partial class MainPage : Page
     {
         private DeviceInformationCollection deviceCollection;
-        private DeviceWatcher deviceWatcher;
         private HidDevice selectedDevice;
 
         public MainPage()
@@ -23,18 +22,13 @@ namespace BarcodeScannerApp
 
         private async void MainPage_Loaded(object sender, RoutedEventArgs e)
         {
-            // Start device watcher to list HID devices (including barcode scanners)
-            deviceWatcher = DeviceInformation.CreateWatcher(DeviceClass.HumanInterfaceDevice);
-            deviceWatcher.Added += DeviceWatcher_Added;
-            deviceWatcher.Start();
-        }
-
-        private async void DeviceWatcher_Added(DeviceWatcher sender, DeviceInformation args)
-        {
-            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            // Use the correct selector to list HID devices
+            string selector = HidDevice.GetDeviceSelector(0x00, 0x00); // Generic HID device
+            deviceCollection = await DeviceInformation.FindAllAsync(selector);
+            foreach (var device in deviceCollection)
             {
-                DeviceListBox.Items.Add(args);
-            });
+                DeviceListBox.Items.Add(device);
+            }
         }
 
         private async void SelectDeviceButton_Click(object sender, RoutedEventArgs e)
